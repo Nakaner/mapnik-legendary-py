@@ -1,0 +1,105 @@
+width: 100
+height: 60
+background: "transparent"
+features:
+  -
+    name: "motorway"
+    type: "linestring"
+    tags:
+      feature: "highway_motorway"
+      highway: "motorway"
+    layers:
+      - "roads-casing"
+      - "roads-fill"
+    zoom: 18
+  -
+    name: "motorway"
+    type: "linestring"
+    tags:
+      feature: "highway_motorway"
+      highway: "motorway"
+    layers:
+      - "roads-casing"
+      - "roads-fill"
+    zoom: 15
+  -
+    name: "motorway"
+    type: "linestring"
+    tags:
+      feature: "highway_motorway"
+      highway: "motorway"
+    layers:
+      - "roads-low-zoom"
+    zoom: 6
+  -
+    name: "residential"
+    type: "linestring"
+    tags:
+      feature: "highway_residential"
+      highway: "residential"
+    layers:
+      - "roads-casing"
+      - "roads-fill"
+    zoom: 15
+  -
+    name: "footway"
+    type: "linestring"
+    tags:
+      feature: "highway_footway"
+      highway: "footway"
+    layers:
+      - "roads-casing"
+      - "roads-fill"
+    zoom: 15
+  -
+    name: "pub"
+    type: "point"
+    tags:
+      amenity: "pub"
+    layers:
+      - "amenity-points"
+    zoom: 16
+  -
+    name: "park"
+    type: "polygon"
+    tags:
+      feature: "leisure_park"
+    layers:
+      - "landcover"
+    zoom: 15
+extra_tags:
+# This list has to contain all fields which are queried by the Mapnik style but not set above.
+  - "feature"
+  - "cycleway"
+  - "service"
+  - "tunnel"
+  - "bicycle"
+  - "bridge"
+  - "construction"
+  - "highway"
+  - "foot"
+  - "horse"
+  - "tracktype"
+  - "access"
+  - "historic"
+  - "leisure"
+  - "lock"
+  - "man_made"
+  - "religion"
+  - "shop"
+  - "tourism"
+  - "waterway"
+  - "link"
+  - "castle_type"
+  - "denomination"
+  - "generator:source"
+  - "height"
+  - "iata"
+  - "icao"
+  - "location"
+  - "name"
+  - "telescope:diameter"
+  - "telescope:type"
+  - "tower:construction"
+  - "tower:type"
+  - "way_pixels"
