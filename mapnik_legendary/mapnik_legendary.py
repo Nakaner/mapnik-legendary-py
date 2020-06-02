@@ -35,8 +35,8 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
         m.background = mapnik.Color(legend["background"])
     layer_styles = []
     for l in m.layers:
-        #TODO Is this the correct translation of Ruby's map()?
-        layer_styles.append({"name": l.name, "style": l.styles[0]})
+        # List comprehension is required to force Python to copy the list of styles. It goes out of scope otherwise.
+        layer_styles.append({"name": l.name, "styles": [ s for s in l.styles ]})
     docs = DocWriter()
     docs.image_width = legend["width"]
 
@@ -64,7 +64,8 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
                     l = mapnik.Layer(layer_name, m.srs)
                     datasource = mapnik.Datasource(type="csv", inline=part.to_csv())
                     l.datasource = datasource
-                    l.styles.append(layer_style["style"])
+                    for lls in layer_style["styles"]:
+                        l.styles.append(lls)
                     m.layers.append(l)
 
         fid = feature.name
@@ -82,7 +83,7 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
             r = r"^CSV Plugin: no attribute '([^']+)'"
             match_data = re.match(r, str(e))
             if match_data:
-                sys.stderr.write("ERROR: {} is a key needed for the {} feature. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, match_data.group(1)))
+                sys.stderr.write("ERROR: {} is a key needed for feature \"{}\" on zoom level {}. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, z, match_data.group(1)))
                 continue
             else:
                 raise e
