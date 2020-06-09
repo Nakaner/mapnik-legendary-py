@@ -8,6 +8,7 @@ features:
     tags:
       feature: "highway_motorway"
       highway: "motorway"
+      int_surface: "paved"
     layers:
       - "roads-casing"
       - "roads-fill"
@@ -18,6 +19,7 @@ features:
     tags:
       feature: "highway_motorway"
       highway: "motorway"
+      int_surface: "paved"
     layers:
       - "roads-casing"
       - "roads-fill"
@@ -28,6 +30,8 @@ features:
     tags:
       feature: "highway_motorway"
       highway: "motorway"
+      tunnel: "no"
+      link: "no"
     layers:
       - "roads-low-zoom"
     zoom: 6
@@ -37,6 +41,7 @@ features:
     tags:
       feature: "highway_residential"
       highway: "residential"
+      int_surface: "paved"
     layers:
       - "roads-casing"
       - "roads-fill"
@@ -47,6 +52,7 @@ features:
     tags:
       feature: "highway_footway"
       highway: "footway"
+      int_surface: "paved"
     layers:
       - "roads-casing"
       - "roads-fill"
@@ -55,21 +61,23 @@ features:
     name: "pub"
     type: "point"
     tags:
-      amenity: "pub"
+      feature: "amenity_pub"
+      is_building: "no"
     layers:
       - "amenity-points"
-    zoom: 16
+    zoom: 17
   -
     name: "park"
     type: "polygon"
     tags:
       feature: "leisure_park"
+      is_building: "no"
     layers:
       - "landcover"
     zoom: 15
 extra_tags:
 # This list has to contain all fields which are queried by the Mapnik style but not set above.
-  - "feature"
+#  - "feature"
   - "cycleway"
   - "service"
   - "tunnel"
@@ -103,3 +111,8 @@ extra_tags:
   - "tower:construction"
   - "tower:type"
   - "way_pixels"
+  - "artwork_type"
+  - "information"
+  - "memorial"
+  - "recycling_type"
+  - "sport"
