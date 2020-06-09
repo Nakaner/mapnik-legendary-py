@@ -16,6 +16,7 @@ or database connections to make this work.
 
 * [Python-Mapnik bindings](https://github.com/mapnik/Ruby-Mapnik) >= 0.2.0
 * mapnik 3.x and Python3
+* Pillow
 * All data sources set up as required by the style for rendering. This means if your styles requires a database called "gis" with a specific schema, you have to load some data into it.
 
 ## Running
