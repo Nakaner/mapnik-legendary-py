@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import yaml
+from PIL import Image, ImageColor
 from .doc_writer import DocWriter
 from .feature import Feature
 
@@ -19,6 +20,33 @@ def clear_layers(mapnik_map):
         # Since no proper method is exposed to delete a layer, we have to fall back to __delitem__
         mapnik_map.layers.__delitem__(i)
 
+
+def image_only_background(path, background_color):
+    """Check if the image shows background only."""
+    with Image.open(path) as image:
+        if background_color == "transparent":
+            bc = "#ffffff00"
+        else:
+            bc = background_color
+        width = image.width
+        height = image.height
+        if not bc.startswith("#"):
+            bc = "#{}".format(bc)
+        if len(bc) != 7 and len(bc) != 9:
+            raise Exception("Background color format not supported. Use #RRGGBB or #RRGGBBAA instead.")
+        if len(bc) == 7:
+            bc += "ff"
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
+        c = ImageColor.getcolor(bc, "RGBA")
+        for x in range(width):
+            for y in range(height):
+                pixel_color = image.getpixel((x, y))
+                if pixel_color != c and (pixel_color[3] != 0 and pixel_color[3] != c[3]):
+                    return False
+        return True
+
+
 def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     DEFAULT_ZOOM = 17
     out_dir = os.path.join(os.getcwd(), "output")
@@ -31,8 +59,11 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     mapnik.load_map_from_string(m, map_file.read().encode("utf-8"), False, os.path.dirname(map_file.name))
     m.width = legend['width']
     m.height = legend['height']
-    if "background" in legend:
-        m.background = mapnik.Color(legend["background"])
+    background_color = legend.get("background", "transparent")
+    if background_color == "transparent":
+        m.background = mapnik.Color(255, 255, 255, 0)
+    else:
+        m.background = mapnik.Color(background_color)
     layer_styles = []
     for l in m.layers:
         # List comprehension is required to force Python to copy the list of styles. It goes out of scope otherwise.
@@ -87,6 +118,8 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
                 continue
             else:
                 raise e
+        if image_only_background(filename, background_color):
+            sys.stderr.write("WARNING: Feature \"{}\" on zoom {} not rendered, legend image is empty.\n".format(feature.name, z))
         docs.append(os.path.basename(filename), feature.description)
 
     with open(os.path.join(out_dir, "docs.html"), "w") as f:
