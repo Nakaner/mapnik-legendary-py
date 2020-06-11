@@ -78,7 +78,6 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     #TODO Allow to choose output directory from command line
     os.makedirs("output", exist_ok=True)
     for idx, feature in enumerate(legend["features"], start=0):
-        # TODO: use a proper csv library rather than .join(",") !
         z = zoom
         if z is None:
             z = feature.get("zoom", DEFAULT_ZOOM)
