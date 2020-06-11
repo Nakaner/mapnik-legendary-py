@@ -8,6 +8,7 @@ import yaml
 from PIL import Image, ImageColor
 from .doc_writer import DocWriter
 from .feature import Feature
+from .exceptions import MapnikLegendaryError
 
 def clean_name(old_id):
     """Replace invalid characters."""
@@ -33,7 +34,7 @@ def image_only_background(path, background_color):
         if not bc.startswith("#"):
             bc = "#{}".format(bc)
         if len(bc) != 7 and len(bc) != 9:
-            raise Exception("Background color format not supported. Use #RRGGBB or #RRGGBBAA instead.")
+            raise MapnikLegendaryError("Background color format not supported. Use #RRGGBB or #RRGGBBAA instead.")
         if len(bc) == 7:
             bc += "ff"
         if image.mode != "RGBA":
@@ -54,7 +55,8 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     if "fonts_dir" in legend:
         mapnik.FontEngine.register_fonts(legend["fonts_dir"])
     srs = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over"
-    #TODO Raise error instead of exception if width or height are missing
+    if "width" not in legend or "height" not in legend:
+        raise MapnikLegendaryError("width or height not specified in legend definition")
     m = mapnik.Map(legend['width'], legend['height'], srs)
     mapnik.load_map_from_string(m, map_file.read().encode("utf-8"), False, os.path.dirname(map_file.name))
     m.width = legend['width']
@@ -114,7 +116,7 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
             r = r"^CSV Plugin: no attribute '([^']+)'"
             match_data = re.match(r, str(e))
             if match_data:
-                sys.stderr.write("ERROR: {} is a key needed for feature \"{}\" on zoom level {}. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, z, match_data.group(1)))
+                raise MapnikLegendaryError("{} is a key needed for feature \"{}\" on zoom level {}. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, z, match_data.group(1)))
                 continue
             else:
                 raise e
