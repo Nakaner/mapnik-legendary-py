@@ -6,8 +6,9 @@ import logging
 from mapnik_legendary import generate_legend
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-z", "--zoom", type=int, default=None, help="Override the zoom level stated in the legend file")
-parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
+parser.add_argument("-i", "--images-dir", type=str, help="Output directory for images")
+parser.add_argument("-o", "--output-file", type=argparse.FileType("w"), required=True, help="Output file (rendered template)")
+parser.add_argument("-z", "--zoom", type=int, default=None, help="Render the legend for the specified zoom level only")
 parser.add_argument("legend_file", type=argparse.FileType("r"), help="Legend file")
 parser.add_argument("map_file", type=argparse.FileType("r"), help="Map file")
 args = parser.parse_args()
@@ -16,8 +17,13 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 logger = logging.getLogger("mapnik_legendary")
 logger.setLevel(logging.INFO)
 
+if not os.path.isdir(args.images_dir):
+    logger.error("Imges output directory {} does not exist".format(args.images_dir))
+    exit(1)
+
 try:
-    generate_legend(args.legend_file, args.map_file, args.zoom, args.overwrite)
+    template = args.template.read()
+    generate_legend(args.legend_file, args.map_file, template, zoom=args.zoom, images_directory=args.images_dir, output_file=args.output_file)
 except Exception as e:
     logger.exception("Mapnik Legendary failed")
     exit(1)

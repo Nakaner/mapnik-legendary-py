@@ -50,10 +50,27 @@ def image_only_background(path, background_color):
         return True
 
 
-def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
-    DEFAULT_ZOOM = 17
+def generate_legend(legend_file, map_file, template, **kwargs):#output_directory, zoom=None, overwrite=False):
+    """Generate a map key for a Mapnik map style.
+
+    Args:
+        legend_file (file): File-like object the YAML document defining the items of the legend should be read from
+        map_file (file): File-like object the Mapnik XML map style should be read from
+        template (str): Jinja2 template to render
+
+    Keyword Args:
+        output_file (file): File-like object to write the rendered template to (default: sys.stdout)
+        images_directory (str): Path to a directory where the images are supposed to be written to
+            (defaults to the directory of the output file).
+        zoom (int): The zoom level the legend should be produced for (defaults to None). If it is not provided,
+            all zoom levels specified in the legend file will be produced.
+    """
+        
     logger = logging.getLogger("mapnik-legendary")
-    out_dir = os.path.join(os.getcwd(), "output")
+    images_dir = kwargs.get("images_directory", os.path.dirname(os.path.abspath(output_file.name)))
+    zoom = kwargs.get("zoom")
+    output_file = kwargs.get("output_file", sys.stdout)
+
     legend = yaml.safe_load(legend_file)
     if "fonts_dir" in legend:
         mapnik.FontEngine.register_fonts(legend["fonts_dir"])
@@ -70,15 +87,15 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     else:
         m.background = mapnik.Color(background_color)
     layer_styles = LayerStyles(m.layers)
-    docs = DocWriter()
-    docs.image_width = legend["width"]
+    docs = DocWriter(legend["width"], template)
 
-    #TODO Allow to choose output directory from command line
-    os.makedirs("output", exist_ok=True)
     for idx, feature in enumerate(legend["features"], start=0):
-        z = zoom
+        z = feature.get("zoom")
         if z is None:
-            z = feature.get("zoom", DEFAULT_ZOOM)
+            raise MapnikLegendaryError("Zoom missing for feature \"{}\".".format(feature.name))
+        if z != zoom and zoom is not None:
+            logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(feature.name, z, zoom))
+            continue
         feature = Feature(feature, z, m, legend["extra_tags"])
         m.zoom_to_box(feature.envelope())
         clear_layers(m)
@@ -96,11 +113,11 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
         if not fid:
             fid = "legend-{}".format(idx)
         fid = clean_name(fid)
-        filename = os.path.join(out_dir, "{}-{}.png".format(fid, z))
+        filename = os.path.join(images_dir, "{}-{}.png".format(fid, z))
         i = 0
         while os.path.isfile(filename) and not overwrite:
             i += 1
-            filename = os.path.join(out_dir, "{}-{}-{}.png".format(fid, z, i))
+            filename = os.path.join(images_dir, "{}-{}-{}.png".format(fid, z, i))
         try:
             mapnik.render_to_file(m, filename, "png256:t=2")
         except Exception as e:
@@ -115,6 +132,6 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
             logger.warn("Feature \"{}\" on zoom {} not rendered, legend image is empty.".format(feature.name, z))
         docs.append(os.path.basename(filename), feature.description)
 
-    with open(os.path.join(out_dir, "docs.html"), "w") as f:
-        f.write(docs.to_html())
+    output_file.write(docs.to_html())
+    output_file.flush
     # PDF output intentionally dropped

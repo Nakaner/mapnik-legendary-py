@@ -1,0 +1,10 @@
+<html>
+    <head></head>
+    <body>
+        <table>
+            {% for entry in entries %}
+            <tr><td><img src="{{ entry[0] }}"></td><td>{{ entry[1] }}</td></tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

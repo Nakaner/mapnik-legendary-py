@@ -4,7 +4,7 @@ from .part import Part
 class Feature:
     def __init__(self, feature, zoom, m, extra_tags):
         self.name = feature["name"]
-        self.description = feature.get("description", self.name.upper())
+        self.description = feature.get("description", self.name)
         self.parts = []
         if "parts" in feature:
             for part in feature["parts"]:

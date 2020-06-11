@@ -2,25 +2,21 @@
 import jinja2
 
 class DocWriter:
-    def __init__(self):
+    """Write the HTML file of the legend table."""
+    def __init__(self, width, template):
+        """
+        Args:
+            width (int): width of the legend images
+            tempalte (str): content of the template as string
+        """
         self.entries = []
-        self.image_width = 100
+        self.image_width = width
         self.env = jinja2.Environment(autoescape=True)
+        self.template = self.env.from_string(template)
 
     def append(self, image, description):
         self.entries.append((image, description))
 
     def to_html(self):
-        template = self.env.from_string("""
-<html>
-    <head></head>
-    <body>
-        <table>
-            {% for entry in entries %}
-            <tr><td><img src="{{ entry[0] }}"></td><td>{{ entry[1] }}</td></tr>
-            {% endfor %}
-        </table>
-    </body>
-</html>""")
-        html = template.render(entries=self.entries)
+        html = self.template.render(entries=self.entries)
         return html
