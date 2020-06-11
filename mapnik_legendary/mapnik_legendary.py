@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: MIT
 
+import logging
 import mapnik
 import os
 import re
-import sys
 import yaml
 from PIL import Image, ImageColor
 from .doc_writer import DocWriter
 from .feature import Feature
 from .exceptions import MapnikLegendaryError
+
 
 def clean_name(old_id):
     """Replace invalid characters."""
@@ -50,6 +51,7 @@ def image_only_background(path, background_color):
 
 def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
     DEFAULT_ZOOM = 17
+    logger = logging.getLogger("mapnik-legendary")
     out_dir = os.path.join(os.getcwd(), "output")
     legend = yaml.safe_load(legend_file)
     if "fonts_dir" in legend:
@@ -86,12 +88,12 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
 
         for part in feature.parts:
             if not part:
-                sys.stderr.write("WARNING: Can't find any layers defined for a part of {}\n".format(feature.name))
+                logger.warn("Can't find any layers defined for a part of {}".format(feature.name))
                 continue
             for layer_name in part.layers:
                 ls = [ l for l in layer_styles if l["name"] == layer_name ]
                 if len(ls) == 0:
-                    sys.stderr.write("WARNING: Can't find {} in the xml file.\n".format(layer_name))
+                    logger.warn("Can't find {} in the xml file.".format(layer_name))
                     continue
                 for layer_style in ls:
                     l = mapnik.Layer(layer_name, m.srs)
@@ -121,7 +123,7 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
             else:
                 raise e
         if image_only_background(filename, background_color):
-            sys.stderr.write("WARNING: Feature \"{}\" on zoom {} not rendered, legend image is empty.\n".format(feature.name, z))
+            logger.warn("Feature \"{}\" on zoom {} not rendered, legend image is empty.".format(feature.name, z))
         docs.append(os.path.basename(filename), feature.description)
 
     with open(os.path.join(out_dir, "docs.html"), "w") as f:

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
 import csv
 import io
-import sys
 from .geometry import Geometry
 
 class Part:
