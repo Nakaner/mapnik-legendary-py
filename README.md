@@ -1,5 +1,3 @@
-**This port is experimental and has still some serious bugs.**
-
 # Mapnik Legendary – Python Port
 
 [mapnik_legendary.py](https://github.com/nakaner/mapnik-legendary-py) is the
@@ -37,4 +35,12 @@ See [examples/openstreetmap-carto-legend.yml](examples/openstreetmap-carto-legen
 
 ## License
 
-This software is based on mapnik-legendary (for Ruby) by Andy Allan and published under the terms of the MIT license. See [LICENSE.md](LICENSE.md) for details.
+Copyright (c) 2013 Andy Allan
+Copyright (c) 2020 Michael Reichert
+
+This software is based on mapnik-legendary (for Ruby) by Andy Allan and published under the terms
+of the GNU Lesser General Public License version 2.1 or newer. See [COPYING](COPYING) for the full
+text of version 3 of the license.
+
+The original mapnik-legendary for Ruby was published under the terms of the X11 license. See
+[X11_license.md](X11_license.md) for details.

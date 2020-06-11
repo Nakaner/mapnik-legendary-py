@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: LGPL-2.1-only
 
 import logging
 import mapnik
@@ -9,6 +9,7 @@ from PIL import Image, ImageColor
 from .doc_writer import DocWriter
 from .feature import Feature
 from .exceptions import MapnikLegendaryError
+from .layer_styles import LayerStyles
 
 
 def clean_name(old_id):
@@ -68,10 +69,7 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
         m.background = mapnik.Color(255, 255, 255, 0)
     else:
         m.background = mapnik.Color(background_color)
-    layer_styles = []
-    for l in m.layers:
-        # List comprehension is required to force Python to copy the list of styles. It goes out of scope otherwise.
-        layer_styles.append({"name": l.name, "styles": [ s for s in l.styles ]})
+    layer_styles = LayerStyles(m.layers)
     docs = DocWriter()
     docs.image_width = legend["width"]
 
@@ -90,16 +88,8 @@ def generate_legend(legend_file, map_file, zoom=None, overwrite=False):
                 logger.warn("Can't find any layers defined for a part of {}".format(feature.name))
                 continue
             for layer_name in part.layers:
-                ls = [ l for l in layer_styles if l["name"] == layer_name ]
-                if len(ls) == 0:
-                    logger.warn("Can't find {} in the xml file.".format(layer_name))
-                    continue
-                for layer_style in ls:
-                    l = mapnik.Layer(layer_name, m.srs)
-                    datasource = mapnik.Datasource(type="csv", inline=part.to_csv())
-                    l.datasource = datasource
-                    for lls in layer_style["styles"]:
-                        l.styles.append(lls)
+                l = layer_styles.prepare_layer(layer_name, m.srs, part)
+                if l:
                     m.layers.append(l)
 
         fid = feature.name
