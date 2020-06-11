@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: LGPL-2.1-only
+# SPDX-License-Identifier: LGPL-2.1-or-later
 import csv
 import io
 from .geometry import Geometry
