@@ -25,13 +25,20 @@ For full options, run
 mapnik-legendary.py -h
 ```
 
-## Examples
+## Example
+
 
 ```sh
-mapnik-legendary.py examples/openstreetmap-carto-legend.yml osm-carto.xml
+mkdir -p output
+mapnik-legendary.py -o output/legend.html -t tempaltes/plain_table.html -z 18 examples/openstreetmap-carto-legend.yml path/to/osm-carto.xml
 ```
 
-See [examples/openstreetmap-carto-legend.yml](examples/openstreetmap-carto-legend.yml)
+In order to work as expected, this example requires OSM Carto cloned at
+`path/to/style`, its Mapnik XML file at `path/to/style/osm-carto.xml` and a
+database containing at least empty tables with all required columns. It wil
+render the legend for zoom level 18.
+
+See [examples/openstreetmap-carto-legend.yml](examples/openstreetmap-carto-legend.yml) as an example.
 
 ## License
 
