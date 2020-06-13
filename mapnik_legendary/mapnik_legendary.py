@@ -4,6 +4,7 @@ import logging
 import mapnik
 import os
 import re
+import sys
 import yaml
 from PIL import Image, ImageColor
 from .doc_writer import DocWriter
@@ -67,10 +68,13 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
     """
         
     logger = logging.getLogger("mapnik-legendary")
-    images_dir = kwargs.get("images_directory", os.path.dirname(os.path.abspath(output_file.name)))
     zoom = kwargs.get("zoom")
     output_file = kwargs.get("output_file", sys.stdout)
-
+    images_dir = kwargs.get("images_directory")
+    if output_file != sys.stdout and images_dir is None:
+        images_dir = os.path.dirname(os.path.abspath(output_file.name))
+    elif output_file == sys.stdout and images_dir is None:
+        raise MapnikLegendaryError("Cannot guess images output directory because the output file is not a regular file (e.g. standard output)")
     legend = yaml.safe_load(legend_file)
     if "fonts_dir" in legend:
         mapnik.FontEngine.register_fonts(legend["fonts_dir"])
@@ -93,10 +97,10 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
         z = feature.get("zoom")
         if z is None:
             raise MapnikLegendaryError("Zoom missing for feature \"{}\".".format(feature.name))
+        feature = Feature(feature, z, m, legend["extra_tags"])
         if z != zoom and zoom is not None:
             logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(feature.name, z, zoom))
             continue
-        feature = Feature(feature, z, m, legend["extra_tags"])
         m.zoom_to_box(feature.envelope())
         clear_layers(m)
 
@@ -114,10 +118,6 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
             fid = "legend-{}".format(idx)
         fid = clean_name(fid)
         filename = os.path.join(images_dir, "{}-{}.png".format(fid, z))
-        i = 0
-        while os.path.isfile(filename) and not overwrite:
-            i += 1
-            filename = os.path.join(images_dir, "{}-{}-{}.png".format(fid, z, i))
         try:
             mapnik.render_to_file(m, filename, "png256:t=2")
         except Exception as e:

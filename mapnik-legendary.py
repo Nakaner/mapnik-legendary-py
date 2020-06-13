@@ -3,11 +3,13 @@
 
 import argparse
 import logging
+import os.path
 from mapnik_legendary import generate_legend
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--images-dir", type=str, help="Output directory for images")
 parser.add_argument("-o", "--output-file", type=argparse.FileType("w"), required=True, help="Output file (rendered template)")
+parser.add_argument("-t", "--template", type=argparse.FileType("r"), required=True, help="File to read the HTML template from")
 parser.add_argument("-z", "--zoom", type=int, default=None, help="Render the legend for the specified zoom level only")
 parser.add_argument("legend_file", type=argparse.FileType("r"), help="Legend file")
 parser.add_argument("map_file", type=argparse.FileType("r"), help="Map file")
