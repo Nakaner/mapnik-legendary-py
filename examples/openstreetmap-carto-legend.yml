@@ -12,18 +12,8 @@ features:
     layers:
       - "roads-casing"
       - "roads-fill"
-    zoom: 18
-  -
-    name: "motorway"
-    type: "linestring"
-    tags:
-      feature: "highway_motorway"
-      highway: "motorway"
-      int_surface: "paved"
-    layers:
-      - "roads-casing"
-      - "roads-fill"
-    zoom: 15
+    min_zoom: 15
+    max_zoom: 18
   -
     name: "motorway"
     type: "linestring"
@@ -56,7 +46,8 @@ features:
     layers:
       - "roads-casing"
       - "roads-fill"
-    zoom: 15
+    min_zoom: 15
+    max_zoom: 18
   -
     name: "pub"
     type: "point"
@@ -65,7 +56,8 @@ features:
       is_building: "no"
     layers:
       - "amenity-points"
-    zoom: 17
+    min_zoom: 16
+    max_zoom: 18
   -
     name: "park"
     type: "polygon"
@@ -74,7 +66,8 @@ features:
       is_building: "no"
     layers:
       - "landcover"
-    zoom: 15
+    min_zoom: 12
+    max_zoom: 18
 extra_tags:
 # This list has to contain all fields which are queried by the Mapnik style but not set above.
 #  - "feature"

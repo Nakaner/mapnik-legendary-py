@@ -14,8 +14,8 @@ class DocWriter:
         self.env = jinja2.Environment(autoescape=True)
         self.template = self.env.from_string(template)
 
-    def append(self, image, description):
-        self.entries.append((image, description))
+    def append(self, image, description, zoom):
+        self.entries.append((image, description, zoom))
 
     def to_html(self):
         html = self.template.render(entries=self.entries)

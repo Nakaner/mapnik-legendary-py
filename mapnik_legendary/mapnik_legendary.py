@@ -51,6 +51,44 @@ def image_only_background(path, background_color):
         return True
 
 
+def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, background_color, images_dir):
+    """Render a legend item.
+
+    Returns:
+        Tuple (filename of the image, description)
+    """
+    logger = logging.getLogger("mapnik-legendary")
+    mapnik_map.zoom_to_box(feature.envelope())
+    clear_layers(mapnik_map)
+
+    for part in feature.parts:
+        if not part:
+            logger.warn("Can't find any layers defined for a part of {}".format(feature.name))
+            continue
+        for layer_name in part.layers:
+            l = layer_styles.prepare_layer(layer_name, mapnik_map.srs, part)
+            if l:
+                mapnik_map.layers.append(l)
+
+    fid = feature.name
+    if not fid:
+        fid = "legend-{}".format(idx)
+    fid = clean_name(fid)
+    filename = os.path.join(images_dir, "{}-{}.png".format(fid, zoom_level))
+    try:
+        mapnik.render_to_file(mapnik_map, filename, "png256:t=2")
+    except Exception as e:
+        r = r"^CSV Plugin: no attribute '([^']+)'"
+        match_data = re.match(r, str(e))
+        if match_data:
+            raise MapnikLegendaryError("{} is a key needed for feature \"{}\" on zoom level {}. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, zoom_level, match_data.group(1)))
+        else:
+            raise e
+    if image_only_background(filename, background_color):
+        logger.warn("Feature \"{}\" on zoom {} not rendered, legend image is empty.".format(feature.name, zoom_level))
+    return os.path.basename(filename), feature.description
+
+
 def generate_legend(legend_file, map_file, template, **kwargs):#output_directory, zoom=None, overwrite=False):
     """Generate a map key for a Mapnik map style.
 
@@ -95,43 +133,24 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
 
     for idx, feature in enumerate(legend["features"], start=0):
         z = feature.get("zoom")
-        if z is None:
-            raise MapnikLegendaryError("Zoom missing for feature \"{}\".".format(feature.name))
-        feature = Feature(feature, z, m, legend["extra_tags"])
-        if z != zoom and zoom is not None:
-            logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(feature.name, z, zoom))
-            continue
-        m.zoom_to_box(feature.envelope())
-        clear_layers(m)
-
-        for part in feature.parts:
-            if not part:
-                logger.warn("Can't find any layers defined for a part of {}".format(feature.name))
+        min_zoom = feature.get("min_zoom")
+        max_zoom = feature.get("max_zoom")
+        if z is not None and (min_zoom is not None or max_zoom is not None):
+            raise MapnikLegendaryError("Conflicting zoom specification for {}. Sepcify either zoom only or both min_zoom and max_zoom.".format(feature.get("name")))
+        if z is None and (min_zoom is None or max_zoom is None):
+            raise MapnikLegendaryError("Incomplete zoom specification for feature {}.".format(feature.get("name")))
+        if min_zoom is None and max_zoom is None:
+            min_zoom = z
+            max_zoom = z
+        if min_zoom > max_zoom:
+            raise MapnikLegendaryError("min_zoom is larger than max_zoom for feature {}".format(feature.get("name")))
+        for zoom_this in range(min_zoom, max_zoom + 1):
+            f = Feature(feature, zoom_this, m, legend["extra_tags"])
+            if zoom_this != zoom and zoom is not None:
+                logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(f.name, z, zoom))
                 continue
-            for layer_name in part.layers:
-                l = layer_styles.prepare_layer(layer_name, m.srs, part)
-                if l:
-                    m.layers.append(l)
-
-        fid = feature.name
-        if not fid:
-            fid = "legend-{}".format(idx)
-        fid = clean_name(fid)
-        filename = os.path.join(images_dir, "{}-{}.png".format(fid, z))
-        try:
-            mapnik.render_to_file(m, filename, "png256:t=2")
-        except Exception as e:
-            r = r"^CSV Plugin: no attribute '([^']+)'"
-            match_data = re.match(r, str(e))
-            if match_data:
-                raise MapnikLegendaryError("{} is a key needed for feature \"{}\" on zoom level {}. Try adding {} to the extra_tags list.\n".format(match_data.group(1), feature.name, z, match_data.group(1)))
-                continue
-            else:
-                raise e
-        if image_only_background(filename, background_color):
-            logger.warn("Feature \"{}\" on zoom {} not rendered, legend image is empty.".format(feature.name, z))
-        docs.append(os.path.basename(filename), feature.description)
-
+            img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
+            docs.append(img, description, zoom)
     output_file.write(docs.to_html())
     output_file.flush
     # PDF output intentionally dropped
