@@ -140,8 +140,11 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
         if z is None and (min_zoom is None or max_zoom is None):
             raise MapnikLegendaryError("Incomplete zoom specification for feature {}.".format(feature.get("name")))
         if min_zoom is None and max_zoom is None:
-            min_zoom = z
-            max_zoom = z
+            min_zoom = int(z)
+            max_zoom = int(z)
+        else:
+            min_zoom = int(min_zoom)
+            max_zoom = int(max_zoom)
         if min_zoom > max_zoom:
             raise MapnikLegendaryError("min_zoom is larger than max_zoom for feature {}".format(feature.get("name")))
         for zoom_this in range(min_zoom, max_zoom + 1):
@@ -150,7 +153,7 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
                 logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(f.name, z, zoom))
                 continue
             img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
-            docs.append(img, description, zoom)
+            docs.append(img, description, zoom_this)
     output_file.write(docs.to_html())
     output_file.flush
     # PDF output intentionally dropped
