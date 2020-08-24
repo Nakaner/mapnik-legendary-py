@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 import csv
 import io
+from .exceptions import MapnikLegendaryError
 from .geometry import Geometry
 
 class Part:
@@ -17,13 +18,16 @@ class Part:
         result.update(tags)
         return result
 
-    def __init__(self, h, zoom, m, extra_tags):
+    def __init__(self, h, zoom, m, extra_tags, name):
         self.tags = Part.merge_tags(h.get('tags'), extra_tags)
         self.geom = Geometry(h.get('type'), zoom, m)
-        if "layer" in h:
-            self.layers = [h["layer"]]
-        else:
-            self.layers = h["layers"]
+        try:
+            if "layer" in h:
+                self.layers = [h["layer"]]
+            else:
+                self.layers = h["layers"]
+        except KeyError as err:
+            raise MapnikLegendaryError("Key \"layers\" or \"layer\" missing in specification of feature/part {}".format(name))
 
     def to_csv(self):
         strio = io.StringIO()
