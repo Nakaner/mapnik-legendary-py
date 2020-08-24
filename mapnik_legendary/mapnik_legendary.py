@@ -58,6 +58,7 @@ def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, backgrou
         Tuple (filename of the image, description)
     """
     logger = logging.getLogger("mapnik-legendary")
+    logger.info("Rendering feature {} on zoom level {}".format(feature.name, zoom_level))
     mapnik_map.zoom_to_box(feature.envelope())
     clear_layers(mapnik_map)
 
@@ -137,14 +138,19 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
         max_zoom = feature.get("max_zoom")
         if z is not None and (min_zoom is not None or max_zoom is not None):
             raise MapnikLegendaryError("Conflicting zoom specification for {}. Sepcify either zoom only or both min_zoom and max_zoom.".format(feature.get("name")))
-        if z is None and (min_zoom is None or max_zoom is None):
+        if z is None and min_zoom is None and max_zoom is None:
             raise MapnikLegendaryError("Incomplete zoom specification for feature {}.".format(feature.get("name")))
         if min_zoom is None and max_zoom is None:
             min_zoom = int(z)
             max_zoom = int(z)
-        else:
+        if min_zoom is not None:
             min_zoom = int(min_zoom)
+        else:
+            min_zoom = 0
+        if max_zoom is not None:
             max_zoom = int(max_zoom)
+        else:
+            max_zoom = 24
         if min_zoom > max_zoom:
             raise MapnikLegendaryError("min_zoom is larger than max_zoom for feature {}".format(feature.get("name")))
         for zoom_this in range(min_zoom, max_zoom + 1):
