@@ -29,7 +29,7 @@ class LayerStyles:
         l.datasource = mapnik.Datasource(type="csv", inline=part.to_csv())
         styles = self.get_styles(layer_name)
         if len(styles) == 0:
-            logger.warn("Can't find layer {} in the Mapnik xml file.".format(layer_name))
+            self.logger.warn("Can't find layer {} in the Mapnik xml file.".format(layer_name))
             return None
         for style in self.get_styles(layer_name):
             l.styles.append(style)
