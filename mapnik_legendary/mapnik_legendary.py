@@ -129,7 +129,7 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
         m.background = mapnik.Color(255, 255, 255, 0)
     else:
         m.background = mapnik.Color(background_color)
-    layer_styles = LayerStyles(m.layers)
+    layer_styles = LayerStyles(m.layers, kwargs["tmp_dir"])
     docs = DocWriter(legend["width"], template)
 
     for idx, feature in enumerate(legend["features"], start=0):
@@ -153,13 +153,19 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
             max_zoom = 24
         if min_zoom > max_zoom:
             raise MapnikLegendaryError("min_zoom is larger than max_zoom for feature {}".format(feature.get("name")))
+        properties = feature.get("properties", {})
+        if not isinstance(properties, dict):
+            raise MapnikLegendaryError("properties of feature {} is not a key-value mapping but {}".format(
+                feature.get("name"), type(properties)
+            ))
         for zoom_this in range(min_zoom, max_zoom + 1):
             f = Feature(feature, zoom_this, m, legend["extra_tags"])
             if zoom_this != zoom and zoom is not None:
                 logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(f.name, z, zoom))
                 continue
             img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
-            docs.append(img, description, zoom_this)
+            docs.append(img, description, zoom_this, properties)
     output_file.write(docs.to_html())
     output_file.flush
+    layer_styles.cleanup()
     # PDF output intentionally dropped

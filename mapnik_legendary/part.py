@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 import csv
 import io
+import json
 from .exceptions import MapnikLegendaryError
 from .geometry import Geometry
 
@@ -36,3 +37,16 @@ class Part:
         writer.writeheader()
         writer.writerow(self.tags)
         return strio.getvalue()
+
+    def to_geojson(self):
+        geom = self.geom.to_geojson()
+        gjs = {
+            "type": "Feature",
+            "geometry": self.geom.to_geojson(),
+            "properties": { k:v for k,v in self.tags.items() }
+        }
+        feature_collection = {
+            "type": "FeatureCollection",
+            "features": [gjs]
+        }
+        return json.dumps(feature_collection)

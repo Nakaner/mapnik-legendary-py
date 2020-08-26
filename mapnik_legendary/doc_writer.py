@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 import jinja2
+from .legend_entry import LegendEntry
 
 class DocWriter:
     """Write the HTML file of the legend table."""
@@ -14,8 +15,8 @@ class DocWriter:
         self.env = jinja2.Environment(autoescape=True)
         self.template = self.env.from_string(template)
 
-    def append(self, image, description, zoom):
-        self.entries.append((image, description, zoom))
+    def append(self, image, description, zoom, properties={}):
+        self.entries.append(LegendEntry(image, description, zoom, properties))
 
     def to_html(self):
         html = self.template.render(entries=self.entries)
