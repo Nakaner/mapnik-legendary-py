@@ -7,7 +7,6 @@ import re
 import sys
 import yaml
 from PIL import Image, ImageColor
-from .doc_writer import DocWriter
 from .feature import Feature
 from .exceptions import MapnikLegendaryError
 from .layer_styles import LayerStyles
@@ -90,13 +89,13 @@ def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, backgrou
     return os.path.basename(filename), feature.description
 
 
-def generate_legend(legend_file, map_file, template, **kwargs):#output_directory, zoom=None, overwrite=False):
+def generate_legend(legend_file, map_file, writer_class, **kwargs):#output_directory, zoom=None, overwrite=False):
     """Generate a map key for a Mapnik map style.
 
     Args:
         legend_file (file): File-like object the YAML document defining the items of the legend should be read from
         map_file (file): File-like object the Mapnik XML map style should be read from
-        template (str): Jinja2 template to render
+        writer_class (class): instance of class implementing the output format
 
     Keyword Args:
         output_file (file): File-like object to write the rendered template to (default: sys.stdout)
@@ -104,9 +103,11 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
             (defaults to the directory of the output file).
         zoom (int): The zoom level the legend should be produced for (defaults to None). If it is not provided,
             all zoom levels specified in the legend file will be produced.
+        template (str): Jinja2 template to render
     """
         
     logger = logging.getLogger("mapnik-legendary")
+    template = kwargs.get("template")
     zoom = kwargs.get("zoom")
     output_file = kwargs.get("output_file", sys.stdout)
     images_dir = kwargs.get("images_directory")
@@ -130,7 +131,7 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
     else:
         m.background = mapnik.Color(background_color)
     layer_styles = LayerStyles(m.layers, kwargs["tmp_dir"])
-    docs = DocWriter(legend["width"], template)
+    writer = writer_class(legend["width"], template)
 
     for idx, feature in enumerate(legend["features"], start=0):
         z = feature.get("zoom")
@@ -164,8 +165,8 @@ def generate_legend(legend_file, map_file, template, **kwargs):#output_directory
                 logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(f.name, z, zoom))
                 continue
             img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
-            docs.append(img, description, zoom_this, properties)
-    output_file.write(docs.to_html())
-    output_file.flush
+            writer.append(img, description, zoom_this, properties)
+    output_file.write(writer.write())
+    output_file.flush()
     layer_styles.cleanup()
     # PDF output intentionally dropped
