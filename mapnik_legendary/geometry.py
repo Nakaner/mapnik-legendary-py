@@ -31,10 +31,10 @@ class Geometry:
             ]])
         elif geom_type == "linestring-with-gap":
             self.geom = geojson.MultiLineString([[
-                (0, 0),
-                (self.max_x * 0.45, self.max_y * 0.45),
-                (self.max_x * 0.55, self.max_y * 0.55),
-                (self.max_x, self.max_y)
+                (0, 0.5 * self.max_y),
+                (self.max_x * 0.45, 0.5 * self.max_y),
+                (self.max_x * 0.55, 0.5 * self.max_y),
+                (self.max_x, 0.5 * self.max_y)
             ]])
         elif geom_type == "polygon-with-hole":
             self.geom = geojson.Polygon([
@@ -49,7 +49,7 @@ class Geometry:
                 ]
             ])
         elif geom_type == "linestring":
-            self.geom = geojson.LineString([[0, 0], [self.max_x, self.max_y]])
+            self.geom = geojson.LineString([[0, 0.5 * self.max_y], [self.max_x, 0.5 * self.max_y]])
         else:
             raise MapnikLegendaryError("Geometry type {} is not supported for legend entries.".format(geom_type))
 
