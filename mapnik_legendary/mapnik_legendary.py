@@ -123,8 +123,10 @@ def generate_legend(legend_file, map_file, writer_class, **kwargs):#output_direc
         raise MapnikLegendaryError("width or height not specified in legend definition")
     m = mapnik.Map(legend['width'], legend['height'], srs)
     mapnik.load_map_from_string(m, map_file.read().encode("utf-8"), False, os.path.dirname(map_file.name))
-    m.width = legend['width']
-    m.height = legend['height']
+    default_width = legend['width']
+    default_height = legend['height']
+    m.width = default_width
+    m.height = default_height
     background_color = legend.get("background", "transparent")
     if background_color == "transparent":
         m.background = mapnik.Color(255, 255, 255, 0)
@@ -164,6 +166,9 @@ def generate_legend(legend_file, map_file, writer_class, **kwargs):#output_direc
             if zoom_this != zoom and zoom is not None:
                 logger.debug("Skipping {} because it is on zoom level {} but {} was requested.".format(f.name, z, zoom))
                 continue
+            # Special height or width for this item
+            m.height = feature.get("image", {}).get("height", default_height)
+            m.width = feature.get("image", {}).get("width", default_width)
             img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
             writer.append(img, description, zoom_this, properties)
     output_file.write(writer.write())
