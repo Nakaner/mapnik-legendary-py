@@ -3,18 +3,14 @@
 import logging
 import mapnik
 import os
-import re
 import sys
 import yaml
 from PIL import Image, ImageColor
 from .feature import Feature
 from .exceptions import MapnikLegendaryError
 from .layer_styles import LayerStyles
+from .legend_entry import clean_name, LegendEntry
 
-
-def clean_name(old_id):
-    """Replace invalid characters."""
-    return re.sub(r"[^\w\s_-]+", "", old_id)
 
 def clear_layers(mapnik_map):
     """Remove all layers from a mapnik.Map instance because mapnik_map.layers.clear() does not work."""
@@ -50,7 +46,7 @@ def image_only_background(path, background_color):
         return True
 
 
-def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, background_color, images_dir):
+def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, background_color, properties, images_dir):
     """Render a legend item.
 
     Returns:
@@ -74,7 +70,8 @@ def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, backgrou
     if not fid:
         fid = "legend-{}".format(idx)
     fid = clean_name(fid)
-    filename = os.path.join(images_dir, "{}-{}.png".format(fid, zoom_level))
+    legend_entry = LegendEntry(fid, feature.description, zoom_level, properties, images_dir)
+    filename = legend_entry.get_image_file_path()
     try:
         mapnik.render_to_file(mapnik_map, filename, "png256:t=2")
     except Exception as e:
@@ -86,7 +83,7 @@ def generate_legend_item(mapnik_map, layer_styles, feature, zoom_level, backgrou
             raise e
     if image_only_background(filename, background_color):
         logger.warn("Feature \"{}\" on zoom {} not rendered, legend image is empty.".format(feature.name, zoom_level))
-    return os.path.basename(filename), feature.description
+    return legend_entry
 
 
 def generate_legend(legend_file, map_file, writer_class, **kwargs):#output_directory, zoom=None, overwrite=False):
@@ -169,8 +166,8 @@ def generate_legend(legend_file, map_file, writer_class, **kwargs):#output_direc
             # Special height or width for this item
             m.height = feature.get("image", {}).get("height", default_height)
             m.width = feature.get("image", {}).get("width", default_width)
-            img, description = generate_legend_item(m, layer_styles, f, zoom_this, background_color, images_dir)
-            writer.append(img, description, zoom_this, properties)
+            legend_entry = generate_legend_item(m, layer_styles, f, zoom_this, background_color, properties, images_dir)
+            writer.append(legend_entry)
     output_file.write(writer.write())
     output_file.flush()
     layer_styles.cleanup()

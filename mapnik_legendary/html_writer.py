@@ -15,8 +15,9 @@ class HTMLWriter:
         self.env = jinja2.Environment(autoescape=True)
         self.template = self.env.from_string(template)
 
-    def append(self, image, description, zoom, properties={}):
-        self.entries.append(LegendEntry(image, description, zoom, properties))
+    def append(self, legend_entry):
+        self.entries.append(legend_entry)
+        return True
 
     def write(self):
         html = self.template.render(entries=self.entries)

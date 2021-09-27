@@ -3,7 +3,7 @@
     <body>
         <table>
             {% for entry in entries %}
-            <tr data-zoom="{{ entry.zoom }}"><td><img src="{{ entry.image }}"></td><td>{{ entry.description }}</td></tr>
+            <tr data-zoom="{{ entry.zoom }}"><td><img src="{{ entry.image_name() }}"></td><td>{{ entry.description }}</td></tr>
             {% endfor %}
         </table>
     </body>
